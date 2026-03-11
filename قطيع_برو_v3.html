@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#0d1117"/>
+<title>قطيع برو</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117;--surf:#161b22;--card:#1c2333;--card2:#21262d;
+  --border:#30363d;--border2:#484f58;
+  --blue:#58a6ff;--green:#3fb950;--red:#f85149;--orange:#e3a008;
+  --purple:#bc8cff;--yellow:#e3b341;
+  --text:#e6edf3;--muted:#8b949e;--dim:#484f58;
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Cairo,sans-serif;overflow:hidden;position:fixed;width:100%}
+#root{height:100vh;display:flex;flex-direction:column;max-width:540px;margin:0 auto;overflow:hidden}
+.sc{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes scan{0%{top:0}100%{top:100%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pop{0%{transform:scale(.85);opacity:0}70%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+.fu{animation:fadeUp .25s ease forwards}
+.su{animation:slideUp .3s cubic-bezier(.32,0,.67,0) forwards}
+.pop{animation:pop .3s cubic-bezier(.34,1.56,.64,1) forwards}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:var(--rs);font-family:Cairo,sans-serif;font-weight:700;cursor:pointer;transition:all .12s;white-space:nowrap;line-height:1}
+.btn:active{transform:scale(.92)}
+.bp{background:var(--blue);color:#0d1117;padding:10px 18px;font-size:13px}
+.bg{background:var(--green);color:#0d1117;padding:10px 18px;font-size:13px}
+.br{background:var(--red);color:#fff;padding:10px 18px;font-size:13px}
+.bgh{background:var(--card2);color:var(--text);border:1px solid var(--border);padding:9px 16px;font-size:13px}
+.bsm{padding:6px 12px!important;font-size:12px!important;border-radius:6px!important}
+.blg{padding:13px 24px!important;font-size:15px!important;border-radius:var(--r)!important}
+.bfw{width:100%}
+.bi{padding:8px;background:var(--card2);border:1px solid var(--border)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.inp{width:100%;background:var(--surf);border:1px solid var(--border);border-radius:var(--rs);padding:10px 13px;color:var(--text);font-family:Cairo,sans-serif;font-size:14px;outline:none;transition:border .15s}
+.inp:focus{border-color:var(--blue)}
+.sel{width:100%;background:var(--surf);border:1px solid var(--border);border-radius:var(--rs);padding:10px 13px;color:var(--text);font-family:Cairo,sans-serif;font-size:14px;outline:none}
+.lbl{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block}
+.badge{display:inline-flex;align-items:center;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.mono{font-family:"IBM Plex Mono",monospace}
+.ring{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:var(--blue)}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 15px;border-top-width:3px}
+/* Sheet */
+.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:900;display:flex;align-items:flex-end;justify-content:center}
+.sh{background:var(--surf);width:100%;max-width:540px;border-radius:20px 20px 0 0;max-height:92vh;display:flex;flex-direction:column}
+.sh-h{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto}
+/* Modal */
+.mo-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;display:flex;align-items:center;justify-content:center;padding:12px}
+.mo{background:var(--surf);width:100%;max-width:540px;border-radius:var(--r);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+/* Camera */
+.cam{position:fixed;inset:0;background:#000;z-index:2000;display:flex;flex-direction:column}
+/* Bottom nav */
+.bnav{background:var(--surf);border-top:1px solid var(--border);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;background:transparent;border:none;cursor:pointer;border-top:2px solid transparent;transition:all .15s;font-family:Cairo,sans-serif}
+.ni.act{border-top-color:var(--blue)}
+.ni-ic{font-size:20px;line-height:1}
+.ni-lb{font-size:10px;font-weight:700;color:var(--muted)}
+.ni.act .ni-lb{color:var(--blue)}
+/* Toast */
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:9999;padding:9px 20px;border-radius:30px;font-size:13px;font-weight:700;font-family:Cairo,sans-serif;white-space:nowrap;animation:pop .3s ease forwards;pointer-events:none;max-width:90vw;text-align:center}
+/* Numpad */
+.np{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.nk{background:var(--card2);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);padding:11px 0;font-size:17px;font-weight:700;cursor:pointer;font-family:"IBM Plex Mono",monospace;text-align:center;transition:all .1s;width:100%}
+.nk:active{background:var(--border2);transform:scale(.9)}
+/* Inv bar */
+.inv-bar{height:7px;border-radius:4px;background:var(--border);overflow:hidden;margin-top:4px}
+.inv-fill{height:100%;border-radius:4px;transition:width .5s}
+/* Timeline */
+.tl{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.tl-d{width:9px;height:9px;border-radius:50%;margin-top:5px;flex-shrink:0}
+/* Photo */
+.ph-th{width:76px;height:76px;border-radius:var(--rs);object-fit:cover;border:2px solid var(--border)}
+/* Sticky search */
+.srch{display:flex;gap:8px;padding:10px 12px;background:var(--surf);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+/* Sec hdr */
+.sh2{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sh2t{font-size:13px;font-weight:700}
+/* Chart */
+.ch-wrap{position:relative;width:100%;height:180px}
+@media print{body>*:not(#pr){display:none!important}#pr{display:block!important;background:#fff;color:#000;direction:rtl;font-family:Cairo,sans-serif}@page{size:A4;margin:14mm}}
+#pr{display:none}
+</style>
+<script>
+if(location.protocol==="file:"||location.hostname==="localhost"){}
+else if(location.protocol!=="https:")location.replace("https://"+location.hostname+location.pathname);
+</script>
+</head>
+<body>
+<div id="root"></div>
+<div id="pr"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useCallback,useMemo}=React;
+
+// ── CONSTANTS ─────────────────────────────────────────────────────
+const COMPANY="شركة تطوير البقلوليات",UNIT="وحدة الإنتاج الفلاحي سي سعيد";
+const SK="qp3",SC="qp3c";
+const CATS=["نعجة","كبش","خروف","خروفة","حمل","حولي","حولية"];
+const FOOD=["تبن","علف مركب","شعير","نخالة","ذرة","كسبة صويا","دريس","ملح معدني","فيتامينات","كالسيوم"];
+const MEDS=["لقاح الجدري","لقاح الحمى القلاعية","لقاح البروسيلا","مضاد حيوي","مضاد طفيلي","بيتادين","مسكن/مضاد التهاب","سيروم كالسيوم","فيتامين AD3E","مطهر خارجي"];
+const COMM0=[
+  {role:"رئيس اللجنة / مسيّر الوحدة",name:"",id:""},
+  {role:"الطبيب البيطري",name:"",id:""},
+  {role:"رئيس العمال / المسؤول التقني",name:"",id:""},
+  {role:"عون تربية المواشي",name:"",id:""},
+  {role:"محاسب الوحدة",name:"",id:""},
+];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const tod=()=>new Date().toISOString().split("T")[0];
+const fmtD=(v)=>{
+  if(!v)return"";
+  if(v instanceof Date)return v.toLocaleDateString("ar-DZ");
+  if(typeof v==="number")return new Date(Math.round((v-25569)*86400000)).toLocaleDateString("ar-DZ");
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(v)))return new Date(v+"T00:00:00").toLocaleDateString("ar-DZ");
+  return String(v);
+};
+const getSt=(a)=>a.deathDate?"متوفى":a.slaughterDate?"مذبوح":a.saleDate?"مباع":"حي";
+const stC={حي:"var(--green)",متوفى:"var(--red)",مذبوح:"var(--orange)",مباع:"var(--yellow)"};
+const stB={حي:"rgba(63,185,80,.1)",متوفى:"rgba(248,81,73,.08)",مذبوح:"rgba(227,160,8,.08)",مباع:"rgba(227,179,65,.08)"};
+const LS={g:(k)=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch{return null}},s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const INIT={animals:[],sessions:[],feedLog:[],medLog:[],inventory:{food:[],medicine:[]},lastSync:null};
+
+// ── TOAST ──────────────────────────────────────────────────────────
+let _tt;
+const toast=(msg,t="i")=>{
+  const old=document.getElementById("_t");if(old)old.remove();
+  const el=document.createElement("div");el.id="_t";el.className="toast";el.textContent=msg;
+  el.style.background=t==="ok"?"var(--green)":t==="er"?"var(--red)":t==="w"?"var(--orange)":"var(--blue)";
+  el.style.color=t==="ok"||t==="w"?"#0d1117":"#fff";
+  document.body.appendChild(el);clearTimeout(_tt);_tt=setTimeout(()=>el.remove(),2700);
+};
+
+// ── UI ATOMS ───────────────────────────────────────────────────────
+const Btn=({c,on,cl="bp",sm,lg,fw,dis,sx={}})=>
+  <button className={`btn ${cl}${sm?" bsm":""}${lg?" blg":""}${fw?" bfw":""}`} disabled={dis} onClick={on}
+    style={{opacity:dis?.45:1,...sx}}>{c}</button>;
+const Inp=({l,v,on,ph="",tp="text",sx={}})=>(
+  <div style={{marginBottom:11}}>
+    {l&&<label className="lbl">{l}</label>}
+    <input className="inp" type={tp} value={v||""} onChange={e=>on(e.target.value)} placeholder={ph} style={sx}/>
+  </div>);
+const Sl=({l,v,on,opts})=>(
+  <div style={{marginBottom:11}}>
+    {l&&<label className="lbl">{l}</label>}
+    <select className="sel" value={v||""} onChange={e=>on(e.target.value)}>
+      {opts.map(o=><option key={o.v||o} value={o.v||o}>{o.l||o}</option>)}
+    </select>
+  </div>);
+const Bdg=({c,col="var(--blue)"})=>
+  <span className="badge" style={{background:col+"22",color:col,border:`1px solid ${col}44`}}>{c}</span>;
+const SH=({t,a})=><div className="sh2"><span className="sh2t">{t}</span>{a}</div>;
+
+// ── PHOTO CAPTURE ──────────────────────────────────────────────────
+function PhotoCap({photos=[],onChange,max=2,label="📸 الصور"}){
+  const fRef=useRef(),vRef=useRef(),cRef=useRef();
+  const [camOn,setCamOn]=useState(false);
+  const [stream,setStream]=useState(null);
+  const open=async()=>{
+    try{
+      if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+        toast("الكاميرا تحتاج HTTPS أو localhost","w");fRef.current?.click();return;
+      }
+      const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}}});
+      setStream(s);setCamOn(true);
+      setTimeout(()=>{if(vRef.current){vRef.current.srcObject=s;vRef.current.play().catch(()=>{});}},100);
+    }catch(err){
+      console.error("Camera error:",err.name,err.message);
+      if(err.name==="NotAllowedError")toast("امنح إذن الكاميرا من الإعدادات","w");
+      else if(err.name==="NotFoundError")toast("لا توجد كاميرا في الجهاز","w");
+      else toast("الكاميرا غير متاحة: "+err.name,"w");
+      fRef.current?.click();
+    }
+  };
+  const close=()=>{stream?.getTracks().forEach(t=>t.stop());setStream(null);setCamOn(false);};
+  const snap=()=>{
+    const c=cRef.current,v=vRef.current;
+    c.width=v.videoWidth;c.height=v.videoHeight;
+    c.getContext("2d").drawImage(v,0,0);
+    onChange([...photos,c.toDataURL("image/jpeg",.72)].slice(0,max));
+    close();toast("✓ تم التقاط الصورة","ok");
+  };
+  const fromFile=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=ev=>onChange([...photos,ev.target.result].slice(0,max));
+    r.readAsDataURL(f);e.target.value="";
+  };
+  return(
+    <div>
+      <label className="lbl">{label} ({photos.length}/{max})</label>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8,alignItems:"center"}}>
+        {photos.map((p,i)=>(
+          <div key={i} style={{position:"relative"}}>
+            <img src={p} className="ph-th" alt=""/>
+            <button onClick={()=>onChange(photos.filter((_,j)=>j!==i))}
+              style={{position:"absolute",top:-6,right:-6,background:"var(--red)",color:"#fff",border:"none",borderRadius:"50%",width:20,height:20,fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+          </div>
+        ))}
+        {photos.length<max&&<div style={{display:"flex",gap:6}}>
+          <Btn c="📷" cl="bgh" sm on={open}/>
+          <Btn c="🖼" cl="bgh" sm on={()=>fRef.current.click()}/>
+        </div>}
+      </div>
+      <input ref={fRef} type="file" accept="image/*" style={{display:"none"}} onChange={fromFile}/>
+      <canvas ref={cRef} style={{display:"none"}}/>
+      {camOn&&(
+        <div style={{position:"fixed",inset:0,background:"#000",zIndex:3000,display:"flex",flexDirection:"column"}}>
+          <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(0,0,0,.85)"}}>
+            <span style={{fontWeight:800,fontSize:14}}>📸 التقط صورة</span>
+            <Btn c="✕ إغلاق" cl="br" sm on={close}/>
+          </div>
+          <div style={{flex:1,position:"relative"}}>
+            <video ref={vRef} style={{width:"100%",height:"100%",objectFit:"cover"}} playsInline muted/>
+          </div>
+          <div style={{padding:"16px",background:"rgba(0,0,0,.85)",display:"flex",justifyContent:"center"}}>
+            <Btn c="📸 التقاط" cl="bp" lg on={snap}/>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SCANNER ────────────────────────────────────────────────────────
+function Scanner({onResult,onClose,knownRings=[]}){
+  const vRef=useRef(),stRef=useRef();
+  const [manual,setManual]=useState("");
+  const [msg,setMsg]=useState(null);
+  const [camOk,setCamOk]=useState(false);
+  useEffect(()=>{
+    (async()=>{
+      try{
+        if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){setCamOk(false);return;}
+        const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1280}}});
+        stRef.current=s;
+        if(vRef.current){vRef.current.srcObject=s;vRef.current.play().catch(()=>{});}
+        setCamOk(true);
+      }catch(err){console.error("Scanner cam:",err.name);setCamOk(false);}
+    })();
+    return()=>stRef.current?.getTracks().forEach(t=>t.stop());
+  },[]);
+  const submit=useCallback((v)=>{
+    const ring=String(v||manual).trim();
+    if(!ring)return;
+    if(!knownRings.includes(ring)){
+      setMsg({t:"❌ الحلقة \""+ring+"\" غير موجودة في القطيع",c:"var(--red)"});
+      setManual("");return;
+    }
+    onResult(ring);
+    setMsg({t:"✅ تم تسجيل الحلقة "+ring,c:"var(--green)"});
+    setManual("");
+  },[knownRings,manual,onResult]);
+  const nums=[1,2,3,4,5,6,7,8,9,0,"⌫","↵"];
+  return(
+    <div className="cam">
+      <div style={{padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(13,17,23,.92)"}}>
+        <div><div style={{fontWeight:800,fontSize:14}}>📷 مسح حلقات الأذن</div>
+          <div style={{fontSize:11,color:"var(--muted)"}}>أدخل رقم الحلقة يدوياً أو بعد رؤيتها</div></div>
+        <Btn c="✕" cl="br" sm on={()=>{stRef.current?.getTracks().forEach(t=>t.stop());onClose();}}/>
+      </div>
+      <div style={{flex:1,position:"relative",overflow:"hidden"}}>
+        {camOk?(
+          <>
+            <video ref={vRef} style={{width:"100%",height:"100%",objectFit:"cover"}} playsInline muted/>
+            <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+              <div style={{width:230,height:88,border:"2px solid var(--blue)",borderRadius:10,
+                boxShadow:"0 0 0 2000px rgba(0,0,0,.5)",position:"relative"}}>
+                {[[{top:-1,right:-1},"top","right"],[{top:-1,left:-1},"top","left"],
+                  [{bottom:-1,right:-1},"bottom","right"],[{bottom:-1,left:-1},"bottom","left"]].map(([pos,v,h],i)=>(
+                  <div key={i} style={{position:"absolute",width:18,height:18,...pos,
+                    [`border${v.charAt(0).toUpperCase()+v.slice(1)}`]:"3px solid var(--blue)",
+                    [`border${h.charAt(0).toUpperCase()+h.slice(1)}`]:"3px solid var(--blue)",
+                    borderRadius:v==="top"&&h==="right"?"0 8px 0 0":v==="top"?"8px 0 0 0":v==="bottom"&&h==="right"?"0 0 8px 0":"0 0 0 8px"}}/>
+                ))}
+                <div style={{position:"absolute",left:4,right:4,height:2,
+                  background:"linear-gradient(90deg,transparent,var(--blue),transparent)",
+                  animation:"scan 1.8s linear infinite",opacity:.9}}/>
+              </div>
+            </div>
+          </>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:10,color:"var(--muted)"}}>
+            <div style={{fontSize:44}}>📷</div>
+            <div style={{fontSize:13}}>الكاميرا غير متاحة</div>
+            <div style={{fontSize:12}}>استخدم الأرقام أدناه</div>
+          </div>
+        )}
+      </div>
+      {msg&&<div className="fu" key={msg.t} style={{padding:"8px 16px",background:msg.c+"22",borderTop:`1px solid ${msg.c}44`,fontSize:13,color:msg.c,textAlign:"center"}}>{msg.t}</div>}
+      <div style={{background:"var(--surf)",borderTop:"1px solid var(--border)",padding:"11px 13px"}}>
+        <div style={{display:"flex",gap:9,marginBottom:9}}>
+          <input className="inp mono" value={manual} onChange={e=>setManual(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="رقم الحلقة" autoFocus
+            style={{flex:1,fontSize:22,fontWeight:700,textAlign:"center",border:"2px solid var(--blue)"}}/>
+          <Btn c="✓" cl="bg" lg on={()=>submit()}/>
+        </div>
+        <div className="np">
+          {nums.map((n,i)=>(
+            <button key={i} className="nk" onClick={()=>n==="⌫"?setManual(p=>p.slice(0,-1)):n==="↵"?submit():setManual(p=>p+n)}>{n}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ANIMAL FORM ────────────────────────────────────────────────────
+function AnimalForm({animal,mode="add",onSave,onCancel}){
+  const [f,setF]=useState(()=>animal||{id:uid(),ring:"",ring2:"",ringHistory:[],
+    sex:"أنثى",category:"نعجة",birthDate:"",motherRing:"",notes:"",weight:"",color:"",origin:"",
+    deathDate:"",slaughterDate:"",saleDate:"",deathPhotos:[],slaughterPhotos:[],salePhotos:[]});
+  const s=(k,v)=>setF(p=>({...p,[k]:v}));
+  const [newRing,setNewRing]=useState("");
+  const replaceRing=()=>{
+    if(!newRing.trim()){toast("أدخل الرقم الجديد","w");return;}
+    const hist=[...(f.ringHistory||[]),{old:f.ring,date:tod(),reason:"ضياع/تلف"}];
+    s("ringHistory",hist);s("ring",newRing);setNewRing("");
+    toast(`✓ تم تغيير الحلقة إلى ${newRing}`,"ok");
+  };
+  const validate=()=>{if(!f.ring.trim()){toast("رقم الحلقة مطلوب","er");return false;}return true;};
+  return(
+    <div style={{padding:"0 14px 16px"}}>
+      <div className="g2">
+        <Inp l="رقم الحلقة 1 ★" v={f.ring} on={v=>s("ring",v)} ph="مثال: 1042"/>
+        <Inp l="رقم الحلقة 2" v={f.ring2} on={v=>s("ring2",v)} ph="اختياري"/>
+        <Sl l="الجنس" v={f.sex} on={v=>s("sex",v)} opts={["أنثى","ذكر"]}/>
+        <Sl l="الفئة" v={f.category} on={v=>s("category",v)} opts={CATS}/>
+        <Inp l="تاريخ الازدياد" v={f.birthDate} on={v=>s("birthDate",v)} tp="date"/>
+        <Inp l="حلقة الأم" v={f.motherRing} on={v=>s("motherRing",v)} ph="رقم حلقة الأم"/>
+        <Inp l="الوزن (كغ)" v={f.weight} on={v=>s("weight",v)} ph="35"/>
+        <Inp l="اللون/المواصفات" v={f.color} on={v=>s("color",v)} ph="أبيض"/>
+      </div>
+      <Inp l="الأصل/المصدر" v={f.origin} on={v=>s("origin",v)} ph="محلي/مستورد..."/>
+      <Inp l="ملاحظات" v={f.notes} on={v=>s("notes",v)} ph="أي ملاحظات..."/>
+      {mode==="edit"&&(
+        <>
+          <div className="divider"/>
+          <SH t="🔄 تغيير رقم الحلقة (عند الضياع أو التلف)"/>
+          <div style={{display:"flex",gap:8,marginBottom:4}}>
+            <input className="inp mono" value={newRing} onChange={e=>setNewRing(e.target.value)} placeholder="الرقم الجديد" style={{flex:1}}/>
+            <Btn c="تغيير ↺" cl="bgh" sm on={replaceRing}/>
+          </div>
+          {(f.ringHistory||[]).length>0&&(
+            <div style={{marginTop:8}}>
+              <label className="lbl">سجل الحلقات السابقة:</label>
+              {f.ringHistory.map((h,i)=>(
+                <div key={i} style={{fontSize:12,color:"var(--muted)",display:"flex",gap:8,padding:"3px 0"}}>
+                  <span className="ring" style={{color:"var(--orange)"}}>{h.old}</span>
+                  <span>{h.date}</span><span>{h.reason}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+      <div className="divider"/>
+      <SH t="📅 تسجيل الأحداث"/>
+      <div className="g3">
+        <Inp l="تاريخ الوفاة" v={f.deathDate} on={v=>s("deathDate",v)} tp="date"/>
+        <Inp l="ذبح استعجالي" v={f.slaughterDate} on={v=>s("slaughterDate",v)} tp="date"/>
+        <Inp l="تاريخ البيع" v={f.saleDate} on={v=>s("saleDate",v)} tp="date"/>
+      </div>
+      {f.deathDate&&<div style={{padding:10,background:"rgba(248,81,73,.08)",borderRadius:8,border:"1px solid rgba(248,81,73,.2)",marginBottom:10}}>
+        <PhotoCap photos={f.deathPhotos||[]} onChange={v=>s("deathPhotos",v)} max={2} label="📸 صور حالة الوفاة"/>
+      </div>}
+      {f.slaughterDate&&<div style={{padding:10,background:"rgba(227,160,8,.08)",borderRadius:8,border:"1px solid rgba(227,160,8,.2)",marginBottom:10}}>
+        <PhotoCap photos={f.slaughterPhotos||[]} onChange={v=>s("slaughterPhotos",v)} max={2} label="📸 صور الذبح الاستعجالي"/>
+      </div>}
+      {f.saleDate&&<div style={{padding:10,background:"rgba(227,179,65,.08)",borderRadius:8,border:"1px solid rgba(227,179,65,.2)",marginBottom:10}}>
+        <PhotoCap photos={f.salePhotos||[]} onChange={v=>s("salePhotos",v)} max={2} label="📸 صور عملية البيع"/>
+      </div>}
+      <div style={{display:"flex",gap:10,marginTop:6}}>
+        <Btn c="💾 حفظ" cl="bg" fw on={()=>validate()&&onSave(f)}/>
+        <Btn c="إلغاء" cl="bgh" on={onCancel}/>
+      </div>
+    </div>
+  );
+}
+
+// ── COUNT SESSION ──────────────────────────────────────────────────
+function CountSess({animals,sessions,onUpdate,onClose}){
+  const alive=useMemo(()=>animals.filter(a=>getSt(a)==="حي"),[animals]);
+  const allRings=useMemo(()=>alive.flatMap(a=>[String(a.ring),a.ring2?String(a.ring2):""].filter(Boolean)),[alive]);
+  const [sess,setSess]=useState(()=>{
+    const ex=sessions.find(s=>s.active);
+    return ex||{id:uid(),date:tod(),scanned:[],active:true,
+      label:`إحصاء ${new Date().toLocaleDateString("ar-DZ",{month:"long",year:"numeric"})}`};
+  });
+  const [showCam,setShowCam]=useState(false);
+  const [tab,setTab]=useState("all");
+  const scSet=useMemo(()=>new Set(sess.scanned),[sess.scanned]);
+  const counted=useMemo(()=>alive.filter(a=>scSet.has(String(a.ring))||scSet.has(String(a.ring2||""))),[alive,scSet]);
+  const missing=useMemo(()=>alive.filter(a=>!scSet.has(String(a.ring))&&!scSet.has(String(a.ring2||""))),[alive,scSet]);
+  const pct=alive.length?Math.round(counted.length/alive.length*100):0;
+  const handleScan=useCallback(ring=>{
+    if(scSet.has(ring)){toast(`⚠️ الحلقة ${ring} مسجَّلة مسبقاً`,"w");return;}
+    const upd={...sess,scanned:[...sess.scanned,ring]};
+    setSess(upd);onUpdate(upd);toast(`✅ حلقة ${ring} — تم`,"ok");
+  },[scSet,sess,onUpdate]);
+  const finish=()=>{
+    const fin={...sess,active:false,closedAt:new Date().toISOString(),
+      totalAlive:alive.length,totalCounted:counted.length,missingRings:missing.map(a=>a.ring)};
+    setSess(fin);onUpdate(fin);onClose();
+    toast(`✅ الإحصاء اكتمل — ${counted.length}/${alive.length}`,"ok");
+  };
+  const list=tab==="missing"?missing:alive;
+  return(
+    <div style={{position:"fixed",inset:0,background:"var(--bg)",zIndex:5000,display:"flex",flexDirection:"column"}}>
+      <div style={{padding:"11px 14px",background:"var(--surf)",borderBottom:"1px solid var(--border)",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+        <div><div style={{fontWeight:900,fontSize:14}}>🔢 {sess.label}</div><div style={{fontSize:11,color:"var(--muted)"}}>{sess.date}</div></div>
+        <div style={{display:"flex",gap:7}}>
+          <Btn c="📷 مسح" cl="bp" sm on={()=>setShowCam(true)}/>
+          <Btn c="✅ إنهاء" cl="bg" sm on={finish}/>
+          <Btn c="✕" cl="bgh" sm on={onClose}/>
+        </div>
+      </div>
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:1,background:"var(--border)",flexShrink:0}}>
+        {[["الكلي",alive.length,"var(--blue)"],["عُدَّ",counted.length,"var(--green)"],["غائب",missing.length,"var(--orange)"],["الإنجاز",pct+"%","var(--yellow)"]].map(([l,v,c],i)=>(
+          <div key={i} style={{background:"var(--surf)",padding:"9px 4px",textAlign:"center"}}>
+            <div style={{fontSize:10,color:"var(--muted)"}}>{l}</div>
+            <div className="mono" style={{fontSize:18,fontWeight:900,color:c}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{height:4,background:"var(--border)",flexShrink:0}}>
+        <div style={{height:"100%",background:"linear-gradient(90deg,var(--green),var(--blue))",width:pct+"%",transition:"width .4s"}}/>
+      </div>
+      {/* Tabs */}
+      <div style={{display:"flex",background:"var(--surf)",borderBottom:"1px solid var(--border)",flexShrink:0}}>
+        {[["all","الكلي",alive.length],["missing","الغائبون ⚠️",missing.length]].map(([v,l,n])=>(
+          <button key={v} onClick={()=>setTab(v)} style={{flex:1,padding:"8px",background:"transparent",border:"none",cursor:"pointer",
+            borderBottom:tab===v?"2px solid var(--blue)":"2px solid transparent",
+            color:tab===v?"var(--blue)":"var(--muted)",fontWeight:700,fontSize:12,fontFamily:"Cairo"}}>{l} ({n})</button>
+        ))}
+      </div>
+      <div className="sc" style={{flex:1,padding:"8px 11px"}}>
+        {tab==="missing"&&missing.length===0&&<div style={{textAlign:"center",padding:"32px",color:"var(--green)",fontWeight:700,fontSize:14}}>✅ تم إحصاء جميع الأغنام!</div>}
+        {list.map(a=>{
+          const done=scSet.has(String(a.ring))||scSet.has(String(a.ring2||""));
+          return(
+            <div key={a.ring} style={{display:"flex",alignItems:"center",gap:9,padding:"9px 11px",
+              background:done?"rgba(63,185,80,.08)":"var(--card)",
+              border:`1px solid ${done?"rgba(63,185,80,.3)":"var(--border)"}`,borderRadius:9,marginBottom:5,transition:"all .2s"}}>
+              <div style={{fontSize:15}}>{done?"✅":"⭕"}</div>
+              <span className="ring">{a.ring}</span>
+              <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>{a.sex}/{a.category}</div><div style={{fontSize:11,color:"var(--muted)"}}>{fmtD(a.birthDate)||"—"}</div></div>
+              {!done&&<Btn c="✓ عدّ" cl="bp" sm on={()=>handleScan(String(a.ring))}/>}
+            </div>
+          );
+        })}
+        {/* Missing list */}
+        {tab==="missing"&&missing.length>0&&(
+          <div className="card" style={{marginTop:10,borderColor:"var(--orange)44"}}>
+            <div style={{fontWeight:700,color:"var(--orange)",marginBottom:8}}>⚠️ الحلقات الغائبة:</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+              {missing.map(a=><span key={a.ring} className="ring" style={{color:"var(--orange)",borderColor:"var(--orange)44"}}>{a.ring}</span>)}
+            </div>
+          </div>
+        )}
+      </div>
+      {showCam&&<Scanner onResult={handleScan} onClose={()=>setShowCam(false)} knownRings={allRings}/>}
+    </div>
+  );
+}
+
+// ── INVENTORY ──────────────────────────────────────────────────────
+function Inventory({data,onUpd}){
+  const [tab,setTab]=useState("food");
+  const [sheets,setSheets]=useState({af:false,am:false,afeed:false,amed:false});
+  const ss=(k,v)=>setSheets(p=>({...p,[k]:v}));
+  const [fF,setFF]=useState({name:"",qty:0,unit:"كغ",min:10,expiry:""});
+  const [mF,setMF]=useState({name:"",qty:0,unit:"جرعة",min:5,expiry:""});
+  const [feedF,setFeedF]=useState({date:tod(),item:"",qty:0,note:""});
+  const [medF,setMedF]=useState({date:tod(),ring:"",vaccine:"",dose:"",vet:"",note:""});
+  const food=data.inventory?.food||[];
+  const meds=data.inventory?.medicine||[];
+  const feedLog=data.feedLog||[];
+  const medLog=data.medLog||[];
+  const lvl=(it)=>it.qty<=0?"نفد":it.qty<it.min?"منخفض":"كافٍ";
+  const lvlC=(it)=>it.qty<=0?"var(--red)":it.qty<it.min?"var(--orange)":"var(--green)";
+  const pct=(it)=>Math.min(100,it.min>0?Math.round(it.qty/it.min*50):50);
+  const saveFood=()=>{
+    onUpd({...data,inventory:{...data.inventory,food:[...food,{...fF,id:uid()}]}});
+    ss("af",false);setFF({name:"",qty:0,unit:"كغ",min:10,expiry:""});toast("✓ تم إضافة المادة","ok");
+  };
+  const saveMed=()=>{
+    onUpd({...data,inventory:{...data.inventory,medicine:[...meds,{...mF,id:uid()}]}});
+    ss("am",false);setMF({name:"",qty:0,unit:"جرعة",min:5,expiry:""});toast("✓ تم إضافة الدواء","ok");
+  };
+  const consume=(tp,id,qty)=>{
+    const arr=tp==="f"?[...food]:[...meds];
+    const i=arr.findIndex(x=>x.id===id);if(i<0)return;
+    arr[i]={...arr[i],qty:Math.max(0,arr[i].qty-Number(qty))};
+    const inv=tp==="f"?{...data.inventory,food:arr}:{...data.inventory,medicine:arr};
+    onUpd({...data,inventory:inv});toast("✓ تم تسجيل الاستهلاك","ok");
+  };
+  const addQty=(tp,id,qty)=>{
+    const arr=tp==="f"?[...food]:[...meds];
+    const i=arr.findIndex(x=>x.id===id);if(i<0)return;
+    arr[i]={...arr[i],qty:arr[i].qty+Number(qty)};
+    const inv=tp==="f"?{...data.inventory,food:arr}:{...data.inventory,medicine:arr};
+    onUpd({...data,inventory:inv});toast("✓ تم تسجيل الإضافة","ok");
+  };
+  const saveFeed=()=>{onUpd({...data,feedLog:[...feedLog,{...feedF,id:uid()}]});ss("afeed",false);setFeedF({date:tod(),item:"",qty:0,note:""});toast("✓ تم تسجيل التغذية","ok");};
+  const saveMed2=()=>{onUpd({...data,medLog:[...medLog,{...medF,id:uid()}]});ss("amed",false);setMedF({date:tod(),ring:"",vaccine:"",dose:"",vet:"",note:""});toast("✓ تم تسجيل العلاج","ok");};
+  const TABS=[["food","🌾 أغذية"],["meds","💊 أدوية"],["feedlog","📋 تغذية"],["medlog","💉 علاج"]];
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      <div style={{display:"flex",overflowX:"auto",background:"var(--surf)",borderBottom:"1px solid var(--border)",flexShrink:0}}>
+        {TABS.map(([v,l])=>(
+          <button key={v} onClick={()=>setTab(v)} style={{padding:"9px 14px",background:"transparent",border:"none",cursor:"pointer",
+            borderBottom:tab===v?"2px solid var(--blue)":"2px solid transparent",
+            color:tab===v?"var(--blue)":"var(--muted)",fontWeight:700,fontSize:12,whiteSpace:"nowrap",fontFamily:"Cairo"}}>{l}</button>
+        ))}
+      </div>
+      <div className="sc" style={{flex:1,padding:"11px"}}>
+        {tab==="food"&&(
+          <>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:9}}><Btn c="➕ إضافة مادة" cl="bg" sm on={()=>ss("af",true)}/></div>
+            {food.length===0&&<div style={{textAlign:"center",color:"var(--muted)",padding:"28px",fontSize:13}}>لا توجد مواد مسجَّلة</div>}
+            {food.map(it=>(
+              <div key={it.id} className="card" style={{marginBottom:9}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                  <div style={{fontWeight:700}}>{it.name}</div><Bdg c={lvl(it)} col={lvlC(it)}/>
+                </div>
+                <div style={{fontSize:13,color:"var(--muted)",marginBottom:7}}>الكمية: <b style={{color:"var(--text)"}}>{it.qty} {it.unit}</b> · الحد الأدنى: <b style={{color:"var(--text)"}}>{it.min} {it.unit}</b>{it.expiry&&` · الصلاحية: ${it.expiry}`}</div>
+                <div className="inv-bar"><div className="inv-fill" style={{width:pct(it)+"%",background:lvlC(it)}}/></div>
+                <div style={{display:"flex",gap:6,marginTop:9}}>
+                  <Btn c="➖ استهلاك" cl="bgh" sm on={()=>{const q=prompt("الكمية المستهلكة:");if(q&&!isNaN(+q))consume("f",it.id,q);}}/>
+                  <Btn c="➕ إضافة" cl="bgh" sm on={()=>{const q=prompt("الكمية المضافة:");if(q&&!isNaN(+q))addQty("f",it.id,q);}}/>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+        {tab==="meds"&&(
+          <>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:9}}><Btn c="➕ إضافة دواء" cl="bg" sm on={()=>ss("am",true)}/></div>
+            {meds.length===0&&<div style={{textAlign:"center",color:"var(--muted)",padding:"28px",fontSize:13}}>لا توجد أدوية</div>}
+            {meds.map(it=>{
+              const exp=it.expiry&&new Date(it.expiry)<new Date();
+              return(
+                <div key={it.id} className="card" style={{marginBottom:9,borderColor:exp?"var(--red)44":"var(--border)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                    <div style={{fontWeight:700}}>{it.name}</div>
+                    <div style={{display:"flex",gap:5}}>{exp&&<Bdg c="منتهي الصلاحية" col="var(--red)"/>}<Bdg c={lvl(it)} col={lvlC(it)}/></div>
+                  </div>
+                  <div style={{fontSize:13,color:"var(--muted)",marginBottom:7}}>الكمية: <b style={{color:"var(--text)"}}>{it.qty} {it.unit}</b>{it.expiry&&<> · الصلاحية: <b style={{color:exp?"var(--red)":"var(--text)"}}>{it.expiry}</b></>}</div>
+                  <div className="inv-bar"><div className="inv-fill" style={{width:pct(it)+"%",background:lvlC(it)}}/></div>
+                  <div style={{display:"flex",gap:6,marginTop:9}}>
+                    <Btn c="➖ استهلاك" cl="bgh" sm on={()=>{const q=prompt("الكمية:");if(q&&!isNaN(+q))consume("m",it.id,q);}}/>
+                    <Btn c="➕ إضافة" cl="bgh" sm on={()=>{const q=prompt("الكمية:");if(q&&!isNaN(+q))addQty("m",it.id,q);}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
+        {tab==="feedlog"&&(
+          <>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:9}}><Btn c="➕ تسجيل تغذية" cl="bg" sm on={()=>ss("afeed",true)}/></div>
+            {feedLog.length===0&&<div style={{textAlign:"center",color:"var(--muted)",padding:"28px",fontSize:13}}>لا توجد سجلات</div>}
+            {feedLog.slice().reverse().map(l=>(
+              <div key={l.id} className="tl">
+                <div className="tl-d" style={{background:"var(--green)"}}/>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>{l.item} — {l.qty} كغ</div><div style={{fontSize:11,color:"var(--muted)"}}>{l.date}{l.note&&` — ${l.note}`}</div></div>
+              </div>
+            ))}
+          </>
+        )}
+        {tab==="medlog"&&(
+          <>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:9}}><Btn c="➕ تسجيل علاج" cl="bg" sm on={()=>ss("amed",true)}/></div>
+            {medLog.length===0&&<div style={{textAlign:"center",color:"var(--muted)",padding:"28px",fontSize:13}}>لا توجد سجلات</div>}
+            {medLog.slice().reverse().map(l=>(
+              <div key={l.id} className="tl">
+                <div className="tl-d" style={{background:"var(--purple)"}}/>
+                <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>{l.ring&&<span className="ring" style={{marginLeft:5,fontSize:11}}>{l.ring}</span>}{l.vaccine}{l.dose&&` — ${l.dose}`}</div><div style={{fontSize:11,color:"var(--muted)"}}>{l.date}{l.vet&&` — د. ${l.vet}`}{l.note&&` — ${l.note}`}</div></div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+      {/* Sheets */}
+      {sheets.af&&<div className="sh-ov" onClick={()=>ss("af",false)}><div className="sh" onClick={e=>e.stopPropagation()}>
+        <div className="sh-h"/><div style={{padding:"11px 14px",fontWeight:800,fontSize:14,borderBottom:"1px solid var(--border)"}}>🌾 إضافة مادة غذائية</div>
+        <div className="sc" style={{padding:"14px",flex:1}}>
+          <Sl l="اسم المادة" v={fF.name} on={v=>setFF(p=>({...p,name:v}))} opts={["اختر...", ...FOOD]}/>
+          <div className="g2"><Inp l="الكمية" v={fF.qty} on={v=>setFF(p=>({...p,qty:+v}))} tp="number"/><Sl l="الوحدة" v={fF.unit} on={v=>setFF(p=>({...p,unit:v}))} opts={["كغ","قنطار","طن","كيس","وحدة"]}/></div>
+          <div className="g2"><Inp l="الحد الأدنى للتنبيه" v={fF.min} on={v=>setFF(p=>({...p,min:+v}))} tp="number"/><Inp l="الصلاحية" v={fF.expiry} on={v=>setFF(p=>({...p,expiry:v}))} tp="date"/></div>
+          <Btn c="💾 حفظ" cl="bg" fw on={saveFood}/>
+        </div>
+      </div></div>}
+      {sheets.am&&<div className="sh-ov" onClick={()=>ss("am",false)}><div className="sh" onClick={e=>e.stopPropagation()}>
+        <div className="sh-h"/><div style={{padding:"11px 14px",fontWeight:800,fontSize:14,borderBottom:"1px solid var(--border)"}}>💊 إضافة دواء/لقاح</div>
+        <div className="sc" style={{padding:"14px",flex:1}}>
+          <Sl l="الدواء/اللقاح" v={mF.name} on={v=>setMF(p=>({...p,name:v}))} opts={["اختر...", ...MEDS]}/>
+          <Inp l="اسم آخر (إن لم يكن في القائمة)" v={mF.customName||""} on={v=>setMF(p=>({...p,name:v||mF.name}))}/>
+          <div className="g2"><Inp l="الكمية" v={mF.qty} on={v=>setMF(p=>({...p,qty:+v}))} tp="number"/><Sl l="الوحدة" v={mF.unit} on={v=>setMF(p=>({...p,unit:v}))} opts={["جرعة","مل","علبة","أمبول","كيس"]}/></div>
+          <div className="g2"><Inp l="الحد الأدنى" v={mF.min} on={v=>setMF(p=>({...p,min:+v}))} tp="number"/><Inp l="تاريخ الصلاحية" v={mF.expiry} on={v=>setMF(p=>({...p,expiry:v}))} tp="date"/></div>
+          <Btn c="💾 حفظ" cl="bg" fw on={saveMed}/>
+        </div>
+      </div></div>}
+      {sheets.afeed&&<div className="sh-ov" onClick={()=>ss("afeed",false)}><div className="sh" onClick={e=>e.stopPropagation()}>
+        <div className="sh-h"/><div style={{padding:"11px 14px",fontWeight:800,fontSize:14,borderBottom:"1px solid var(--border)"}}>🌾 تسجيل تغذية يومية</div>
+        <div className="sc" style={{padding:"14px",flex:1}}>
+          <Inp l="التاريخ" v={feedF.date} on={v=>setFeedF(p=>({...p,date:v}))} tp="date"/>
+          <Sl l="المادة الغذائية" v={feedF.item} on={v=>setFeedF(p=>({...p,item:v}))} opts={["اختر...",...FOOD,...food.map(f=>f.name)]}/>
+          <Inp l="الكمية (كغ)" v={feedF.qty} on={v=>setFeedF(p=>({...p,qty:+v}))} tp="number"/>
+          <Inp l="ملاحظات" v={feedF.note} on={v=>setFeedF(p=>({...p,note:v}))}/>
+          <Btn c="💾 تسجيل" cl="bg" fw on={saveFeed}/>
+        </div>
+      </div></div>}
+      {sheets.amed&&<div className="sh-ov" onClick={()=>ss("amed",false)}><div className="sh" onClick={e=>e.stopPropagation()}>
+        <div className="sh-h"/><div style={{padding:"11px 14px",fontWeight:800,fontSize:14,borderBottom:"1px solid var(--border)"}}>💉 تسجيل علاج/تطعيم</div>
+        <div className="sc" style={{padding:"14px",flex:1}}>
+          <Inp l="التاريخ" v={medF.date} on={v=>setMedF(p=>({...p,date:v}))} tp="date"/>
+          <Inp l="رقم الحلقة (أو فارغ للقطيع كله)" v={medF.ring} on={v=>setMedF(p=>({...p,ring:v}))} ph="1042 أو اتركه فارغاً"/>
+          <Sl l="الدواء/اللقاح" v={medF.vaccine} on={v=>setMedF(p=>({...p,vaccine:v}))} opts={["اختر...",...MEDS,...meds.map(m=>m.name)]}/>
+          <div className="g2"><Inp l="الجرعة" v={medF.dose} on={v=>setMedF(p=>({...p,dose:v}))} ph="2 مل"/><Inp l="اسم البيطري" v={medF.vet} on={v=>setMedF(p=>({...p,vet:v}))}/></div>
+          <Inp l="ملاحظات" v={medF.note} on={v=>setMedF(p=>({...p,note:v}))}/>
+          <Btn c="💾 تسجيل" cl="bg" fw on={saveMed2}/>
+        </div>
+      </div></div>}
+    </div>
+  );
+}
+
+// ── PRINT DOC ──────────────────────────────────────────────────────
+function PrintDoc({a,type,comm,ref1,ref2}){
+  const C=type==="death"?"#C00000":type==="slaughter"?"#C55A11":"#375623";
+  const TT={death:["محضر معاينة وفاة رأس ماشية","Procès-verbal de constat de mort d'animal d'élevage"],
+    slaughter:["محضر توجيه رأس ماشية للذبح الاستعجالي","Procès-verbal d'orientation pour abattage d'urgence"],
+    sale:["محضر بيع شاة موجَّهة للذبح الاستعجالي","Procès-verbal de vente d'animal orienté à l'abattage d'urgence"]};
+  const photos=type==="death"?a.deathPhotos:type==="slaughter"?a.slaughterPhotos:a.salePhotos;
+  const iL={background:"#DEEAF1",padding:"5px 9px",fontWeight:"bold",border:"1px solid #b0c8e0",width:"36%",fontSize:12};
+  const iV={padding:"5px 9px",border:"1px solid #d0d8e0",fontSize:12};
+  const today2=new Date().toLocaleDateString("ar-DZ");
+  return(
+    <div style={{fontFamily:"Cairo,sans-serif",direction:"rtl",color:"#111",lineHeight:1.7,fontSize:13}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontSize:12}}>
+        <div><div style={{fontWeight:"bold"}}>الجمهورية الجزائرية الديمقراطية الشعبية</div><div>وزارة الفلاحة والتنمية الريفية</div></div>
+        <div style={{textAlign:"center"}}><div style={{fontWeight:"bold"}}>{COMPANY}</div><div>{UNIT}</div></div>
+      </div>
+      <div style={{borderTop:"3px double #1F4E79",margin:"8px 0 11px"}}/>
+      <div style={{background:C,color:"#fff",textAlign:"center",padding:"10px 18px",borderRadius:6,marginBottom:11}}>
+        <div style={{fontSize:17,fontWeight:"bold"}}>{TT[type][0]}</div>
+        <div style={{fontSize:11,opacity:.85}}>{TT[type][1]}</div>
+      </div>
+      <div style={{display:"flex",gap:7,marginBottom:11}}>
+        {[["رقم المحضر",ref1||"___________"],type==="sale"&&["رقم محضر التوجيه",ref2||"___________"],["التاريخ",today2],["الحلقة",a.ring]].filter(Boolean).map(([l,v],i)=>(
+          <div key={i} style={{flex:1,border:"1.5px solid #2E75B6",background:"#DEEAF1",padding:"5px 8px",borderRadius:4,fontSize:11}}><b>{l}:</b> {v}</div>
+        ))}
+      </div>
+      <div style={{fontWeight:"bold",fontSize:13,color:C,borderBottom:`2px solid ${C}`,paddingBottom:3,marginBottom:7}}>بيانات الرأس</div>
+      <table style={{width:"100%",borderCollapse:"collapse",marginBottom:10}}><tbody>
+        <tr><td style={iL}>رقم الحلقة</td><td style={iV}>{a.ring}</td><td style={iL}>الجنس/الفئة</td><td style={iV}>{a.sex}/{a.category}</td></tr>
+        <tr><td style={iL}>تاريخ الازدياد</td><td style={iV}>{fmtD(a.birthDate)}</td><td style={iL}>الوزن</td><td style={iV}>{a.weight||"—"} كغ</td></tr>
+        <tr><td style={iL}>{type==="death"?"تاريخ الوفاة":"تاريخ قرار التوجيه"}</td>
+          <td style={{...iV,background:type==="death"?"#ffe0e0":"#fce4d6",fontWeight:"bold"}}>{fmtD(type==="death"?a.deathDate:a.slaughterDate)}</td>
+          <td style={iL}>حلقة الأم</td><td style={iV}>{a.motherRing||"—"}</td></tr>
+        <tr><td style={iL}>السبب/الملاحظات</td><td style={iV} colSpan={3}>{a.notes||"يُحدَّد من قِبَل اللجنة"}</td></tr>
+      </tbody></table>
+      {photos&&photos.length>0&&(
+        <>
+          <div style={{fontWeight:"bold",fontSize:13,color:C,borderBottom:`2px solid ${C}`,paddingBottom:3,marginBottom:8}}>📸 الصور الوثائقية</div>
+          <div style={{display:"flex",gap:10,marginBottom:10}}>
+            {photos.map((p,i)=><img key={i} src={p} style={{width:"48%",borderRadius:6,border:"1px solid #ccc"}} alt=""/>)}
+          </div>
+        </>
+      )}
+      {type==="slaughter"&&<div style={{border:`1px solid ${C}`,borderRadius:4,padding:"8px 11px",background:"#fff8f5",fontSize:12,marginBottom:8}}>قررت اللجنة توجيه هذه الرأس <b>للذبح الاستعجالي وبيعها مباشرةً</b> لتفادي الخسائر الإضافية.</div>}
+      {type==="sale"&&(
+        <>
+          <div style={{fontWeight:"bold",fontSize:13,color:C,borderBottom:`2px solid ${C}`,paddingBottom:3,marginBottom:8}}>بيانات المشتري</div>
+          <table style={{width:"100%",borderCollapse:"collapse",marginBottom:10}}><tbody>
+            <tr><td style={iL}>اسم المشتري</td><td style={iV} colSpan={3}></td></tr>
+            <tr><td style={iL}>رقم التعريف</td><td style={iV}></td><td style={iL}>الهاتف</td><td style={iV}></td></tr>
+            <tr><td style={iL}>ثمن البيع (دج)</td><td style={{...iV,fontWeight:"bold",fontSize:14}}></td><td style={iL}>طريقة الدفع</td><td style={iV}>□ نقداً □ شيك □ تحويل</td></tr>
+          </tbody></table>
+        </>
+      )}
+      <div style={{background:"#f0f4fa",border:"1px solid #b0c8e0",borderRadius:4,padding:"5px 9px",fontSize:11,color:"#444",margin:"7px 0"}}>
+        <b>السند القانوني:</b> القانون 10-03 — المرسوم التنفيذي 95-66 — المرسوم 06-165
+      </div>
+      <div style={{fontWeight:"bold",fontSize:13,color:C,borderBottom:`2px solid ${C}`,paddingBottom:3,marginBottom:8}}>تشكيلة لجنة المعاينة</div>
+      <table style={{width:"100%",borderCollapse:"collapse",fontSize:11,marginBottom:9}}>
+        <thead><tr>{["#","الاسم واللقب","المنصب","رقم التعريف","الإمضاء"].map((h,i)=><th key={i} style={{background:C,color:"#fff",padding:"5px 6px",border:`1px solid ${C}`,textAlign:"center"}}>{h}</th>)}</tr></thead>
+        <tbody>{comm.map((m,i)=><tr key={i}>{[`0${i+1}`,m.name,m.role,m.id,""].map((v,j)=><td key={j} style={{padding:"5px 6px",border:"1px solid #ccc",textAlign:"center",minWidth:j===4?60:undefined}}>{v}</td>)}</tr>)}</tbody>
+      </table>
+      <div style={{fontSize:11,margin:"7px 0 13px",lineHeight:1.8}}>نحن أعضاء اللجنة نُشهد بصحة هذا المحضر. حُرِّر في {type==="sale"?"ثلاث (03)":"نسختين (02)"} نسخ أصلية.</div>
+      <div style={{display:"flex",gap:10}}>
+        {(type==="sale"?["البائع/مسيّر الوحدة","المشتري","عضو اللجنة","محاسب الوحدة"]:["رئيس اللجنة","الطبيب البيطري","عضو اللجنة"]).map((s,i)=>(
+          <div key={i} style={{flex:1,textAlign:"center"}}>
+            <div style={{fontSize:11,fontWeight:"bold",marginBottom:3}}>{s}</div>
+            <div style={{borderBottom:"1.5px solid #000",marginTop:28,marginBottom:3}}/>
+            <div style={{fontSize:10,color:"#666"}}>الاسم: .............</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── REPORT MODAL ────────────────────────────────────────────────────
+function ReportMod({a,type,comm,onClose}){
+  const [r1,setR1]=useState("");const [r2,setR2]=useState("");
+  const C={death:"var(--red)",slaughter:"var(--orange)",sale:"var(--green)"}[type];
+  const L={death:"محضر الوفاة",slaughter:"محضر التوجيه للذبح",sale:"محضر البيع"}[type];
+  const doPrint=()=>{document.getElementById("pr").innerHTML=document.getElementById("rpt").innerHTML;window.print();};
+  return(
+    <div className="mo-ov" onClick={onClose}>
+      <div className="mo" onClick={e=>e.stopPropagation()}>
+        <div style={{background:C,padding:"11px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+          <span style={{fontWeight:700,fontSize:13,color:type==="death"?"#fff":"#0d1117"}}>📋 {L}</span>
+          <div style={{display:"flex",gap:7}}>
+            <button className="btn bgh bsm" style={{color:"#fff",borderColor:"rgba(255,255,255,.3)"}} onClick={doPrint}>🖨️ طباعة</button>
+            <button className="btn bgh bsm" style={{color:"#fff",borderColor:"rgba(255,255,255,.3)"}} onClick={onClose}>✕</button>
+          </div>
+        </div>
+        <div style={{padding:"9px 13px",background:"var(--bg)",borderBottom:"1px solid var(--border)",display:"flex",gap:9,flexWrap:"wrap",flexShrink:0}}>
+          <div><label className="lbl">رقم المحضر</label><input className="inp" value={r1} onChange={e=>setR1(e.target.value)} placeholder="001/2025/وح.س" style={{width:160}}/></div>
+          {type==="sale"&&<div><label className="lbl">رقم محضر التوجيه</label><input className="inp" value={r2} onChange={e=>setR2(e.target.value)} placeholder="002/2025/وح.س" style={{width:160}}/></div>}
+        </div>
+        <div className="sc" style={{flex:1}}>
+          <div id="rpt" style={{padding:"20px 24px",background:"#fff"}}>
+            <PrintDoc a={a} type={type} comm={comm} ref1={r1} ref2={r2}/>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ANALYTICS ──────────────────────────────────────────────────────
+function Analytics({animals,sessions,feedLog}){
+  const c1=useRef(),c2=useRef(),c3=useRef(),ci=useRef({});
+  const alive=useMemo(()=>animals.filter(a=>getSt(a)==="حي"),[animals]);
+  const dead=animals.filter(a=>a.deathDate);
+  const sl=animals.filter(a=>a.slaughterDate);
+  const sold=animals.filter(a=>a.saleDate);
+  const cats=CATS.map(c=>({c,n:alive.filter(a=>a.category===c).length})).filter(x=>x.n>0);
+  const now=new Date();
+  const months=Array.from({length:12},(_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);return{k:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`,l:d.toLocaleDateString("ar-DZ",{month:"short"})};});
+  const bornM=months.map(m=>animals.filter(a=>a.birthDate&&String(a.birthDate).startsWith(m.k)).length);
+  const diedM=months.map(m=>animals.filter(a=>a.deathDate&&String(a.deathDate).startsWith(m.k)).length);
+  const lastSess=sessions.filter(s=>!s.active).sort((a,b)=>b.id-a.id)[0];
+  useEffect(()=>{
+    const d=(k)=>{if(ci.current[k])try{ci.current[k].destroy();}catch{}};
+    const opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#e6edf3",font:{family:"Cairo",size:11}}}},scales:{x:{ticks:{color:"#8b949e",font:{family:"Cairo",size:10}}},y:{ticks:{color:"#8b949e",font:{family:"Cairo",size:10}},grid:{color:"rgba(48,54,61,.5)"}}}};
+    if(c1.current&&months.some((_,i)=>bornM[i]||diedM[i])){
+      d("c1");ci.current.c1=new Chart(c1.current,{type:"line",data:{labels:months.map(m=>m.l),datasets:[
+        {label:"مواليد",data:bornM,borderColor:"#3fb950",backgroundColor:"rgba(63,185,80,.12)",tension:.4,fill:true,pointRadius:3,pointBackgroundColor:"#3fb950"},
+        {label:"وفيات",data:diedM,borderColor:"#f85149",backgroundColor:"rgba(248,81,73,.1)",tension:.4,fill:true,pointRadius:3,pointBackgroundColor:"#f85149"}
+      ]},options:opts});
+    }
+    if(c2.current&&cats.length>0){
+      d("c2");ci.current.c2=new Chart(c2.current,{type:"bar",data:{labels:cats.map(c=>c.c),datasets:[{data:cats.map(c=>c.n),backgroundColor:["#58a6ff","#3fb950","#f85149","#e3b341","#bc8cff","#39d353","#e3a008"],borderRadius:5}]},options:{...opts,plugins:{legend:{display:false}}}});
+    }
+    if(c3.current&&(alive.length+dead.length+sl.length+sold.length)>0){
+      d("c3");ci.current.c3=new Chart(c3.current,{type:"doughnut",data:{labels:["حي","متوفى","مذبوح","مباع"],datasets:[{data:[alive.length,dead.length,sl.length,sold.length],backgroundColor:["#3fb950","#f85149","#e3a008","#e3b341"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#e6edf3",font:{family:"Cairo",size:11}}}}}});
+    }
+    return()=>{d("c1");d("c2");d("c3");};
+  },[animals,feedLog]);
+  return(
+    <div className="sc" style={{flex:1,padding:"13px"}}>
+      <div className="g2" style={{marginBottom:13}}>
+        {[["🐑 الحي",alive.length,"var(--blue)"],["♀ إناث",alive.filter(a=>a.sex==="أنثى").length,"#ec4899"],
+          ["♂ ذكور",alive.filter(a=>a.sex==="ذكر").length,"var(--blue)"],["☠ وفيات",dead.length,"var(--red)"],
+          ["🔪 ذبح",sl.length,"var(--orange)"],["💰 مبيع",sold.length,"var(--yellow)"]].map(([l,v,c],i)=>(
+          <div key={i} className="stat" style={{borderTopColor:c}}>
+            <div style={{fontSize:11,color:"var(--muted)",marginBottom:3}}>{l}</div>
+            <div className="mono" style={{fontSize:24,fontWeight:900,color:c}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      {lastSess&&(
+        <div className="card" style={{marginBottom:13,borderColor:"var(--blue)44"}}>
+          <SH t="📊 آخر إحصاء"/>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:3}}>{lastSess.label} — {lastSess.date}</div>
+          <div style={{height:7,background:"var(--border)",borderRadius:4,marginBottom:8}}>
+            <div style={{height:"100%",borderRadius:4,background:"linear-gradient(90deg,var(--green),var(--blue))",width:`${lastSess.totalAlive?Math.round(lastSess.totalCounted/lastSess.totalAlive*100):0}%`,transition:"width .5s"}}/>
+          </div>
+          <div style={{display:"flex",gap:7}}>
+            <Bdg c={`✅ عُدَّ ${lastSess.totalCounted||0}`} col="var(--green)"/>
+            <Bdg c={`⚠️ غائب ${(lastSess.missingRings||[]).length}`} col="var(--orange)"/>
+          </div>
+          {(lastSess.missingRings||[]).length>0&&<div style={{marginTop:8}}>
+            <div style={{fontSize:11,color:"var(--muted)",marginBottom:5}}>الحلقات الغائبة:</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{lastSess.missingRings.map(r=><span key={r} className="ring" style={{color:"var(--orange)",borderColor:"var(--orange)44",fontSize:12}}>{r}</span>)}</div>
+          </div>}
+        </div>
+      )}
+      {animals.length>0&&<>
+        <div className="card" style={{marginBottom:13}}><SH t="📈 المواليد مقابل الوفيات (12 شهراً)"/><div className="ch-wrap"><canvas ref={c1}/></div></div>
+        <div className="card" style={{marginBottom:13}}><SH t="🐑 تركيبة القطيع"/><div className="ch-wrap"><canvas ref={c2}/></div></div>
+        <div className="card" style={{marginBottom:13}}><SH t="📊 توزيع الحالات"/><div style={{height:180}}><canvas ref={c3}/></div></div>
+      </>}
+      {animals.length===0&&<div style={{textAlign:"center",padding:"48px 20px",color:"var(--muted)"}}>
+        <div style={{fontSize:52,marginBottom:12}}>🐑</div>
+        <div style={{fontSize:15,fontWeight:700,marginBottom:6}}>لا توجد بيانات بعد</div>
+        <div style={{fontSize:13}}>أضف أغناماً من تبويب القطيع أو ارفع ملف Excel من الإعدادات</div>
+      </div>}
+    </div>
+  );
+}
+
+// ── HERD LIST ──────────────────────────────────────────────────────
+function HerdList({animals,onEdit,onReport}){
+  const [search,setSearch]=useState("");
+  const [filter,setFilter]=useState("حي");
+  const [showCam,setShowCam]=useState(false);
+  const allRings=useMemo(()=>animals.flatMap(a=>[String(a.ring),a.ring2?String(a.ring2):""].filter(Boolean)),[animals]);
+  const filtered=useMemo(()=>animals.filter(a=>{
+    const st=getSt(a);
+    return(filter==="all"||st===filter)&&(!search||String(a.ring).includes(search)||String(a.ring2||"").includes(search)||(a.category||"").includes(search));
+  }),[animals,search,filter]);
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      <div className="srch">
+        <input className="inp" value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 رقم الحلقة أو الفئة..." style={{flex:1}}/>
+        <button className="btn bi bsm" onClick={()=>setShowCam(true)}>📷</button>
+      </div>
+      <div style={{display:"flex",overflowX:"auto",background:"var(--surf)",borderBottom:"1px solid var(--border)",flexShrink:0}}>
+        {[["حي","حي"],["متوفى","متوفى"],["مذبوح","مذبوح"],["مباع","مباع"],["all","الكل"]].map(([v,l])=>(
+          <button key={v} onClick={()=>setFilter(v)} style={{padding:"8px 12px",background:"transparent",border:"none",cursor:"pointer",
+            borderBottom:filter===v?"2px solid var(--blue)":"2px solid transparent",
+            color:filter===v?"var(--blue)":"var(--muted)",fontWeight:700,fontSize:12,whiteSpace:"nowrap",fontFamily:"Cairo"}}>
+            {l} ({animals.filter(a=>v==="all"||getSt(a)===v).length})</button>
+        ))}
+      </div>
+      <div className="sc" style={{flex:1,padding:"8px 11px"}}>
+        {filtered.length===0&&<div style={{textAlign:"center",padding:"28px",color:"var(--muted)",fontSize:13}}>لا توجد نتائج</div>}
+        {filtered.map((a,i)=>{
+          const st=getSt(a);const sc=stC[st];const sb=stB[st];
+          return(
+            <div key={a.id||a.ring} className="fu" style={{display:"flex",alignItems:"center",gap:9,padding:"10px 12px",background:sb,border:`1px solid ${sc}33`,borderRadius:9,marginBottom:6}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:sc,flexShrink:0,boxShadow:`0 0 5px ${sc}`}}/>
+              <span className="ring">{a.ring}</span>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700}}>{a.sex}/{a.category}</div>
+                <div style={{fontSize:11,color:"var(--muted)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{fmtD(a.birthDate)||"—"}{a.weight?` · ${a.weight}كغ`:""}</div>
+              </div>
+              <Bdg c={st} col={sc}/>
+              <div style={{display:"flex",gap:4,flexShrink:0}}>
+                <button className="btn bi bsm" onClick={()=>onEdit(a)}>✏️</button>
+                {a.deathDate&&<button className="btn bsm" style={{background:"var(--red)22",color:"var(--red)",border:"1px solid var(--red)44",borderRadius:6,padding:"5px 8px",cursor:"pointer",fontFamily:"Cairo",fontWeight:700}} onClick={()=>onReport(a,"death")}>📋</button>}
+                {a.slaughterDate&&<button className="btn bsm" style={{background:"var(--orange)22",color:"var(--orange)",border:"1px solid var(--orange)44",borderRadius:6,padding:"5px 8px",cursor:"pointer",fontFamily:"Cairo",fontWeight:700}} onClick={()=>onReport(a,"slaughter")}>📋</button>}
+                {a.slaughterDate&&<button className="btn bsm" style={{background:"var(--green)22",color:"var(--green)",border:"1px solid var(--green)44",borderRadius:6,padding:"5px 8px",cursor:"pointer",fontFamily:"Cairo",fontWeight:700}} onClick={()=>onReport(a,"sale")}>💰</button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {showCam&&<Scanner onResult={r=>{setSearch(String(r));setShowCam(false);}} onClose={()=>setShowCam(false)} knownRings={allRings}/>}
+    </div>
+  );
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────
+function Settings({data,onImport,onExport,onReset,comm,onCommChg}){
+  const fRef=useRef();
+  const readXlsx=f=>{
+    if(!f)return;
+    const r=new FileReader();
+    r.onload=e=>{
+      const wb=XLSX.read(e.target.result,{type:"array",cellDates:true});
+      const ws=wb.Sheets["تعداد الأغنام"];
+      if(!ws){toast("لم يُوجد ورقة 'تعداد الأغنام'","er");return;}
+      const raw=XLSX.utils.sheet_to_json(ws,{header:1});
+      const animals=raw.slice(2).filter(r=>r[0]).map((r,idx)=>({
+        id:uid(),num:r[0],
+        birthDate:r[1]instanceof Date?r[1].toISOString().split("T")[0]:fmtD(r[1]),
+        sex:r[2]||"",category:r[3]||"",motherRing:r[4]||"",
+        ring:String(r[5]||r[6]||""),ring2:String(r[6]||""),
+        deathDate:r[7]instanceof Date?r[7].toISOString().split("T")[0]:fmtD(r[7]),
+        slaughterDate:r[8]instanceof Date?r[8].toISOString().split("T")[0]:fmtD(r[8]),
+        saleDate:r[9]instanceof Date?r[9].toISOString().split("T")[0]:fmtD(r[9]),
+        notes:r[12]||"",deathPhotos:[],slaughterPhotos:[],salePhotos:[],ringHistory:[],weight:"",color:"",origin:""
+      })).filter(a=>a.ring);
+      onImport(animals);toast(`✅ تم استيراد ${animals.length} رأس`,"ok");
+    };
+    r.readAsArrayBuffer(f);
+  };
+  return(
+    <div className="sc" style={{flex:1,padding:"13px"}}>
+      <div className="card" style={{marginBottom:13}}>
+        <SH t="📁 البيانات"/>
+        <Btn c="📂 استيراد من Excel" cl="bp" fw on={()=>fRef.current.click()} sx={{marginBottom:9}}/>
+        <input ref={fRef} type="file" accept=".xlsx,.xls" style={{display:"none"}} onChange={e=>readXlsx(e.target.files[0])}/>
+        <Btn c="💾 تصدير كـ Excel" cl="bg" fw on={onExport} sx={{marginBottom:9}}/>
+        <Btn c="🗑 مسح جميع البيانات" cl="bgh" fw on={()=>confirm("⚠️ هل أنت متأكد؟")&&onReset()} sx={{color:"var(--red)",borderColor:"var(--red)44"}}/>
+        {data.lastSync&&<div style={{fontSize:11,color:"var(--muted)",marginTop:9}}>آخر تحديث: {data.lastSync}</div>}
+      </div>
+      <div className="card" style={{marginBottom:13}}>
+        <SH t="👥 أعضاء لجنة المعاينة"/>
+        {comm.map((m,i)=>(
+          <div key={i} style={{marginBottom:11}}>
+            <label className="lbl">{m.role}</label>
+            <div style={{display:"flex",gap:7}}>
+              <input className="inp" value={m.name} onChange={e=>{const c=[...comm];c[i]={...c[i],name:e.target.value};onCommChg(c);}} placeholder="الاسم واللقب" style={{flex:2}}/>
+              <input className="inp" value={m.id} onChange={e=>{const c=[...comm];c[i]={...c[i],id:e.target.value};onCommChg(c);}} placeholder="رقم التعريف" style={{flex:1}}/>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <SH t="📊 إحصاءات النظام"/>
+        {[["الإصدار","2.0.0"],["إجمالي الأغنام المسجَّلة",data.animals.length],["جلسات الإحصاء المنجزة",data.sessions.filter(s=>!s.active).length],["سجلات التغذية",data.feedLog.length],["سجلات العلاج",data.medLog.length]].map(([l,v])=>(
+          <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"7px 0",borderBottom:"1px solid var(--border)",fontSize:13}}>
+            <span style={{color:"var(--muted)"}}>{l}</span>
+            <span className="mono" style={{color:"var(--blue)",fontWeight:700}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN APP ───────────────────────────────────────────────────────
+function App(){
+  const [data,setData]=useState(()=>LS.g(SK)||INIT);
+  const [tab,setTab]=useState("home");
+  const [editA,setEditA]=useState(null);
+  const [addMode,setAddMode]=useState(false);
+  const [report,setReport]=useState(null);
+  const [countMode,setCountMode]=useState(false);
+  const [comm,setComm]=useState(()=>LS.g(SC)||COMM0.map(m=>({...m})));
+  const upd=useCallback(partial=>{
+    setData(prev=>{
+      const next={...prev,...partial,lastSync:new Date().toLocaleString("ar-DZ")};
+      LS.s(SK,next);return next;
+    });
+  },[]);
+  const saveAnimal=f=>{
+    const animals=[...data.animals];
+    const i=animals.findIndex(a=>a.id===f.id);
+    if(i>=0)animals[i]=f;else animals.push(f);
+    upd({animals});setEditA(null);setAddMode(false);toast("✓ تم الحفظ","ok");
+  };
+  const saveComm=c=>{setComm(c);LS.s(SC,c);};
+  const TABS=[{id:"home",ic:"📊",l:"التحليل"},{id:"herd",ic:"🐑",l:"القطيع"},{id:"count",ic:"🔢",l:"الإحصاء"},{id:"inv",ic:"📦",l:"المخزون"},{id:"set",ic:"⚙️",l:"الإعدادات"}];
+  return(
+    <div style={{height:"100vh",display:"flex",flexDirection:"column",background:"var(--bg)"}}>
+      {/* Header */}
+      <div style={{background:"var(--surf)",borderBottom:"1px solid var(--border)",padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+        <div><div style={{fontSize:15,fontWeight:900}}>🐑 قطيع برو</div><div style={{fontSize:10,color:"var(--muted)",marginTop:1}}>{UNIT}</div></div>
+        <div style={{display:"flex",gap:7,alignItems:"center"}}>
+          <div style={{width:7,height:7,borderRadius:"50%",background:"var(--green)",animation:"pulse 2s infinite",boxShadow:"0 0 6px var(--green)"}}/>
+          <span style={{fontSize:11,color:"var(--green)"}}>نشط</span>
+        </div>
+      </div>
+      {/* Content */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        {tab==="home"&&<Analytics animals={data.animals} sessions={data.sessions} feedLog={data.feedLog}/>}
+        {tab==="herd"&&(
+          <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+            <div style={{padding:"9px 12px",display:"flex",justifyContent:"flex-end",borderBottom:"1px solid var(--border)",background:"var(--surf)",flexShrink:0}}>
+              <Btn c="➕ إضافة رأس" cl="bg" sm on={()=>setAddMode(true)}/>
+            </div>
+            <HerdList animals={data.animals} onEdit={a=>setEditA(a)} onReport={(a,t)=>setReport({a,t})}/>
+          </div>
+        )}
+        {tab==="count"&&(
+          <div className="sc" style={{flex:1,padding:"13px"}}>
+            <div className="card" style={{marginBottom:13}}>
+              <SH t="🔢 الإحصاء الشهري"/>
+              <div style={{fontSize:12,color:"var(--muted)",marginBottom:13,lineHeight:1.8}}>سجّل حضور كل رأس بحلقة أذنها — رقم غير موجود يُرفض تلقائياً مع بيان الغائبين</div>
+              <Btn c="📷 بدء جلسة إحصاء جديدة" cl="bp" fw lg on={()=>setCountMode(true)}/>
+            </div>
+            <SH t="📋 جلسات سابقة"/>
+            {data.sessions.filter(s=>!s.active).sort((a,b)=>b.id-a.id).map(s=>(
+              <div key={s.id} className="card" style={{marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div><div style={{fontWeight:700,fontSize:13}}>{s.label}</div><div style={{fontSize:11,color:"var(--muted)"}}>{s.date}</div></div>
+                  <div style={{display:"flex",gap:6}}>
+                    <Bdg c={`✅ ${s.totalCounted||s.scanned.length}`} col="var(--green)"/>
+                    {(s.missingRings||[]).length>0&&<Bdg c={`⚠️ ${(s.missingRings||[]).length}`} col="var(--orange)"/>}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {data.sessions.filter(s=>!s.active).length===0&&<div style={{textAlign:"center",color:"var(--muted)",fontSize:13,padding:"24px"}}>لا توجد جلسات سابقة</div>}
+          </div>
+        )}
+        {tab==="inv"&&<Inventory data={data} onUpd={d=>{LS.s(SK,d);setData(d);}}/>}
+        {tab==="set"&&<Settings data={data} onImport={a=>upd({animals:a})} onExport={()=>{const ws=XLSX.utils.json_to_sheet(data.animals);const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"القطيع");XLSX.writeFile(wb,`قطيع_${Date.now()}.xlsx`);}} onReset={()=>upd(INIT)} comm={comm} onCommChg={saveComm}/>}
+      </div>
+      {/* Bottom nav */}
+      <div className="bnav">
+        {TABS.map(t=>(
+          <button key={t.id} className={`ni${tab===t.id?" act":""}`} onClick={()=>setTab(t.id)}>
+            <span className="ni-ic">{t.ic}</span>
+            <span className="ni-lb">{t.l}</span>
+          </button>
+        ))}
+      </div>
+      {/* Add/Edit sheet */}
+      {(addMode||editA)&&(
+        <div className="sh-ov" onClick={()=>{setAddMode(false);setEditA(null);}}>
+          <div className="sh su" onClick={e=>e.stopPropagation()}>
+            <div className="sh-h"/>
+            <div style={{padding:"11px 14px",fontWeight:800,fontSize:14,borderBottom:"1px solid var(--border)",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+              <span>{editA?"✏️ تعديل رأس":"➕ إضافة رأس جديدة"}</span>
+              <Btn c="✕" cl="bgh" sm on={()=>{setAddMode(false);setEditA(null);}}/>
+            </div>
+            <div className="sc" style={{flex:1,paddingTop:14}}>
+              <AnimalForm animal={editA} mode={editA?"edit":"add"} onSave={saveAnimal} onCancel={()=>{setAddMode(false);setEditA(null);}}/>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Count session */}
+      {countMode&&<CountSess animals={data.animals} sessions={data.sessions}
+        onUpdate={s=>{const sessions=data.sessions.filter(x=>x.id!==s.id);upd({sessions:[...sessions,s]});}}
+        onClose={()=>setCountMode(false)}/>}
+      {/* Report modal */}
+      {report&&<ReportMod a={report.a} type={report.t} comm={comm} onClose={()=>setReport(null)}/>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+
+</script>
+</body>
+</html>
